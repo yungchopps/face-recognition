@@ -1,46 +1,37 @@
+# import libraries
 import cv2
-import numpy as np
+import face_recognition
 
+# Get a reference to webcam 
+video_capture = cv2.VideoCapture(0)
 
-def main():
-    print('OpenCV version:' + cv2.__version__)
+# Initialize variables
+face_locations = []
 
-    # Initialize the face detection classifier
-    faceCascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+while True:
+    # Grab a single frame of video
+    ret, frame = video_capture.read()
 
-    # PC webcam is video source
-    cap = cv2.VideoCapture(0)
-    # Check if the webcam is opened correctly
-    if not cap.isOpened():
-        print("Webcam was not open correctly")
+    # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
+    rgb_frame = frame[:, :, ::-1]
 
-    while True:
-        # Reads the frame
-        ret, frame = cap.read()
-        # Grays the frame
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    # Find all the faces in the current frame of video
+    face_locations = face_recognition.face_locations(rgb_frame)
 
-        # Detects the face
-        faces = faceCascade.detectMultiScale(
-            gray,     
-            scaleFactor=1.2,
-            minNeighbors=5,     
-            minSize=(20, 20)
-        )
-        for (x,y,w,h) in faces:
-            cv2.rectangle(frame,(x,y),(x+w,y+h),(255,0,0),2)
-            roi_gray = gray[y:y+h, x:x+w]
-            roi_color = frame[y:y+h, x:x+w]
-        cv2.imshow('Gray', gray)
-        cv2.imshow('Input', frame)
+    print(face_locations)
 
-        c = cv2.waitKey(1)
-        if c == 27:
-            break
+    # Display the results
+    for top, right, bottom, left in face_locations:
+        # Draw a box around the face
+        cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
 
-    cap.release()
-    cv2.destroyAllWindows()
+    # Display the resulting image
+    cv2.imshow('Video', frame)
 
-        
-if __name__ == "__main__":
-    main()
+    # Hit 'q' on the keyboard to quit!
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# Release handle to the webcam
+video_capture.release()
+cv2.destroyAllWindows()
